@@ -5,7 +5,7 @@ pipeline {
   stages {
       stage('Build m Artifact') {
             steps {
-              sh "mvn clean package -Pskip-pitest"
+              sh "mvn clean package -Pskip-pitest=true"
               archive 'target/*.war' //so tfhat they can be downloaded later
             }
         }   
