@@ -272,26 +272,28 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.4.0</version>
             </plugin>
-            <!-- Jacoco -->
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.10</version>
-				<executions>
-				   <execution>
-					  <goals>
-						 <goal>prepare-agent</goal>
-					  </goals>
-				   </execution>
-				   <execution>
-					  <id>report</id>
-					  <phase>test</phase>
-					  <goals>
-						 <goal>report</goal>
-					  </goals>
-				   </execution>
-				</executions>
-			 </plugin>
+            <!-- JaCoCo Plugin -->
+            <plugin>
+               <groupId>org.jacoco</groupId>
+               <artifactId>jacoco-maven-plugin</artifactId>
+              <version>0.8.10</version>
+               <executions>
+                   <execution>
+                       <id>jacoco-initialize</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                           <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Pit mutation-->
 			 <plugin>
 				<groupId>org.pitest</groupId>
