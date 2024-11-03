@@ -312,7 +312,7 @@
 					  <outputFormat>XML</outputFormat>
 					  <outputFormat>HTML</outputFormat>
 				   </outputFormats>
-                   <failOnMutations>false</failOnMutations>
+                   <failOnNoMutations>false</failOnNoMutations>
 				</configuration>
 			 </plugin>
 			 <!-- Maven Surefire Plugin -->
