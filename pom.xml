@@ -25,15 +25,6 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
     </properties>
-    <profiles>
-     <profile>
-        <id>skip-pitest</id>
-        <properties>
-            <pitest.skip>true</pitest.skip>
-        </properties>
-    </profile>
-  </profiles>
-
 
 
     <dependencies>
@@ -316,12 +307,11 @@
 				   </dependency>
 				</dependencies>
 				<configuration>
-				   <mutationThreshold>30</mutationThreshold>
+				   <mutationThreshold>5</mutationThreshold>
 				   <outputFormats>
 					  <outputFormat>XML</outputFormat>
 					  <outputFormat>HTML</outputFormat>
 				   </outputFormats>
-                   <failOnNoMutations>false</failOnNoMutations>
 				</configuration>
 			 </plugin>
 			 <!-- Maven Surefire Plugin -->

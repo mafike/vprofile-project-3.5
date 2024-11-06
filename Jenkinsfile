@@ -1,90 +1,68 @@
-
 pipeline {
-  agent any
+    agent any
 
-  stages {
-      stage('Build m Artifact') {
+    stages {
+        stage('Build Artifact') {
             steps {
-              sh "mvn clean package -Pskip-pitest=true"
-              archive 'target/*.war' //so tfhat they can be downloaded later
+                sh "mvn clean package -DskipTests=true"
+                archiveArtifacts 'target/*.war' // Archive the WAR file for later download
             }
         }   
-    /*  stage('Unit Tests - JUnit and Jacoco') {
-       steps {
-        sh "mvn test"
-        
-       }
-      } */
-     stage('Mutation Tests - PIT') {
-      steps {
-        sh "mvn org.pitest:pitest-maven:mutationCoverage"
-      }
-    } 
-    /*
-     stage('SonarQube - SAST') {
-      steps {
-        withSonarQubeEnv('sonarqube') {
-        sh "mvn clean verify sonar:sonar \
-            -Dsonar.projectKey=numeric_app \
-            -Dsonar.projectName='numeric_app' \
-            -Dsonar.host.url=http://192.168.33.10:9000 "
-      }
-        timeout(time: 2, unit: 'MINUTES') {
-          script {
-            waitForQualityGate abortPipeline: true
-          }
-        }
-      }   
-     }  */
 
-     stage('Vulnerability Scan - Docker ') {
-      steps {
-        parallel(
-          "Dependency Scan": {
-            sh "mvn dependency-check:check"
-          },
-          "Trivy Scan": {
-            sh "bash trivy-docker-image-scan.sh"
-          }
-        )
-      }
-    }
-       /* stage('Docker Build and Push') {
+        stage('Unit Tests - JUnit and Jacoco') {
             steps {
-                // Use withCredentials to access Docker credentials
-                withCredentials([usernamePassword(credentialsId: 'docker-hub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                    script {
-                        // Print environment variables for debugging
-                        sh 'printenv'
-                        
-                        // Log in to Docker
-                        sh "echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin"
-                        
-                        // Build the Docker image
-                        sh "docker build -t mafike1/numeric-app:${GIT_COMMIT} ."
-                        
-                        // Push the Docker image
-                        sh "docker push mafike1/numeric-app:${GIT_COMMIT}"
-                    }
-                }
+                sh "mvn test"
             }
-        } */
-    } 
-    post {
-     always {
-     // junit 'target/surefire-reports/*.xml'
-     // jacoco execPattern: 'target/jacoco.exec'
-      pitmutation mutationStatsFile: '**/target/pit-reports/**/mutations.xml'
-      dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+        }
+
+        stage('Mutation Tests - PIT') {
+            steps {
+                sh "mvn org.pitest:pitest-maven:mutationCoverage"
+            }
+        }
+
+        stage('Vulnerability Scan - Docker') {
+            steps {
+                parallel(
+                    "Dependency Scan": {
+                        sh "mvn dependency-check:check"
+                    },
+                    "Trivy Scan": {
+                        sh "bash trivy-docker-image-scan.sh"
+                    }
+                )
+            }
+        }
+
     }
 
-    // success {
+    post {
+        always {
+            junit '**/target/surefire-reports/*.xml'   // Archive JUnit test results
+            jacoco execPattern: '**/target/jacoco.exec' // Archive JaCoCo coverage results
+            
+            // Temporary step to list contents of target/pit-reports directory
+            script {
+                sh 'echo "Listing target/pit-reports contents..."'
+                sh 'ls -l target/pit-reports || echo "No pit-reports directory found"'
+            }
+            
+            // Archive PIT reports directory temporarily to ensure it exists
+            archiveArtifacts artifacts: 'target/pit-reports/**/*', allowEmptyArchive: true
 
-    // }
-
-    // failure {
-
-    // }
-   }
-  
+            // Dynamically publish the PIT mutation testing HTML report from the timestamped directory
+            script {
+                def reportDir = sh(script: 'ls -d target/pit-reports/*/', returnStdout: true).trim()
+                echo "Publishing report from: ${reportDir}"
+                
+                publishHTML(target: [
+                    reportName: 'PIT Mutation Testing Report',
+                    reportDir: reportDir,
+                    reportFiles: 'index.html',
+                    keepAll: true,
+                    alwaysLinkToLastBuild: true
+                ])
+            }
+        }
+    }
 }
